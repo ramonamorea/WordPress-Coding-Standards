@@ -137,9 +137,25 @@ class AssignmentInConditionSniff extends Sniff {
 				$opener = $this->tokens[ $prev ]['parenthesis_opener'];
 				$closer = $prev;
 			} elseif ( isset( $token['nested_parenthesis'] ) ) {
-				end( $token['nested_parenthesis'] );
+				$closer = end( $token['nested_parenthesis'] );
 				$opener = key( $token['nested_parenthesis'] );
-				$closer = $stackPtr;
+
+				$next_statement_closer = $this->phpcsFile->findNext( T_SEMICOLON, ( $stackPtr + 1 ), null, false, null, true );
+				if ( false !== $next_statement_closer && $next_statement_closer < $closer )  {
+					// Parentheses are unrelated to the ternary.
+					return;
+				}
+
+				$prev_statement_closer = $this->phpcsFile->findPrevious( T_SEMICOLON, ( $stackPtr - 1 ), null, false, null, true );
+				if ( false !== $prev_statement_closer && $opener < $prev_statement_closer )  {
+					// Parentheses are unrelated to the ternary.
+					return;
+				}
+
+				if ( $closer > $stackPtr ) {
+					$closer = $stackPtr;
+				}
+
 			} else {
 				// No parenthesis found, can't determine where the conditional part of the ternary starts.
 				return;

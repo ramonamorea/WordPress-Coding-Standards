@@ -115,3 +115,38 @@ $mode = ( $a = 'on' ? 'true' : $a = 'off' ? 't' : 'f' ); // Bad x 3. The first ?
 $mode = $a = 'on' ? 'on' : 'off';
 $mode = $a = 'on' ?: 'off';
 $mode = $a = 'on' ? 'true' : $a = 'off' ? 't' : 'f';
+
+// Issue #1227.
+( function () {
+	$foo = 42;
+
+	return 1 === 2 ? 'a' : 'b';
+} );
+
+call_user_func( function () {
+	$foo = 42;
+
+	return 1 === 2 ? 'a' : 'b';
+} );
+
+$content = preg_replace_callback(
+	'/(?s)<table class="viz full.+?<\/table>/',
+	function( $matches ) {
+
+		$table = $matches[0];
+
+		// For smaller tables, use a shorter iframe.
+		$rowcount = substr_count( $table, '<tr>' );
+		$height   = $rowcount < 6 ? '100' : '250';
+		return '
+			<amp-iframe
+			height="' . $height . '"
+			class="table-viz-iframe"
+			frameborder="1"
+			sandbox="allow-scripts"
+			srcdoc="<html><head><style>...</style></head><body>' . $table ) . '</body></html>">
+			</amp-iframe>
+		';
+	},
+	$content
+);
